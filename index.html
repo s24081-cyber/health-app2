@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>건강 자가진단</title>
+
+<link rel="manifest" href="manifest.json">
+
+<style>
+body {
+  font-family: sans-serif;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background: #f2f4f7;
+  margin: 0;
+}
+
+.app {
+  width: 320px;
+  background: white;
+  padding: 20px;
+  border-radius: 15px;
+  text-align: center;
+  box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+}
+
+h2 {
+  margin-bottom: 20px;
+}
+
+.progress {
+  font-size: 14px;
+  color: #666;
+  margin-bottom: 10px;
+}
+
+button {
+  width: 100%;
+  padding: 15px;
+  margin: 8px 0;
+  border: none;
+  border-radius: 10px;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.good { background: #4CAF50; color: white; }
+.normal { background: #FFC107; }
+.bad { background: #F44336; color: white; }
+
+.restart {
+  background: #2196F3;
+  color: white;
+  margin-top: 20px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="app">
+  <div class="progress" id="progress"></div>
+  <h2 id="question"></h2>
+  <div id="answers"></div>
+</div>
+
+<script>
+const questions = [
+  {
+    text: "오늘 몸 상태는 어떠신가요?",
+    options: [
+      { text: "좋다", score: 2 },
+      { text: "보통이다", score: 1 },
+      { text: "안 좋다", score: 0 }
+    ]
+  },
+  {
+    text: "오늘 불편한 곳이 있으신가요?",
+    options: [
+      { text: "없다", score: 2 },
+      { text: "조금 있다", score: 1 },
+      { text: "많이 불편하다", score: 0 }
+    ]
+  },
+  {
+    text: "오늘 식사는 잘 하셨나요?",
+    options: [
+      { text: "잘 먹었다", score: 2 },
+      { text: "조금 먹었다", score: 1 },
+      { text: "거의 못 먹었다", score: 0 }
+    ]
+  },
+  {
+    text: "오늘 도움이 필요하신가요?",
+    options: [
+      { text: "필요 없다", score: 2 },
+      { text: "조금 필요하다", score: 1 },
+      { text: "꼭 필요하다", score: 0 }
+    ]
+  }
+];
+
+let current = 0;
+let totalScore = 0;
+
+function loadQuestion() {
+  const q = questions[current];
+
+  document.getElementById("question").innerText = q.text;
+  document.getElementById("progress").innerText =
+    `${current + 1} / ${questions.length}`;
+
+  const answersDiv = document.getElementById("answers");
+  answersDiv.innerHTML = "";
+
+  q.options.forEach(option => {
+    const btn = document.createElement("button");
+    btn.innerText = option.text;
+
+    if(option.score === 2) btn.className = "good";
+    else if(option.score === 1) btn.className = "normal";
+    else btn.className = "bad";
+
+    btn.onclick = () => {
+      totalScore += option.score;
+      current++;
+
+      if(current < questions.length){
+        loadQuestion();
+      } else {
+        showResult();
+      }
+    };
+
+    answersDiv.appendChild(btn);
+  });
+}
+
+function showResult() {
+  const app = document.querySelector(".app");
+
+  let resultText = "";
+  let message = "";
+
+  const maxScore = questions.length * 2;
+
+  if (totalScore <= maxScore * 0.4) {
+    resultText = "⚠️ 주의 필요";
+    message = "건강 상태를 꼭 확인해주세요.";
+  } else if (totalScore <= maxScore * 0.7) {
+    resultText = "😐 보통 상태";
+    message = "약간의 관리가 필요합니다.";
+  } else {
+    resultText = "😊 정상 상태";
+    message = "오늘도 건강합니다!";
+  }
+
+  app.innerHTML = `
+    <h2>${resultText}</h2>
+    <p>${message}</p>
+    <p>점수: ${totalScore} / ${maxScore}</p>
+    <button class="restart" onclick="restart()">다시하기</button>
+  `;
+}
+
+function restart() {
+  current = 0;
+  totalScore = 0;
+
+  document.querySelector(".app").innerHTML = `
+    <div class="progress" id="progress"></div>
+    <h2 id="question"></h2>
+    <div id="answers"></div>
+  `;
+
+  loadQuestion();
+}
+
+loadQuestion();
+</script>
+
+</body>
+</html>
